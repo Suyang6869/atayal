@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生活館｜館內導覽線上預約</title>
+  <style>
+    :root {
+      --atayal-red: #9E2A2B;
+      --atayal-red-dark: #7A1C1D;
+      --atayal-black: #231F20;
+      --atayal-ramie: #F6F2EA;
+      --atayal-card: #FFFFFF;
+      --atayal-border: #E2D9C8;
+      --atayal-muted: #8C857B;
+    }
+
+    * { box-sizing: border-box; font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
+
+    body {
+      margin: 0;
+      padding: 18px 14px 40px;
+      background-color: var(--atayal-ramie);
+      color: var(--atayal-black);
+    }
+
+    .container { max-width: 640px; margin: 0 auto; }
+
+    /* 泰雅菱形織紋飾條 */
+    .atayal-stripe {
+      height: 14px;
+      width: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='14' viewBox='0 0 36 14'%3E%3Crect width='36' height='14' fill='%23231F20'/%3E%3Cpolygon points='18,1 30,7 18,13 6,7' fill='%23B22222'/%3E%3Cpolygon points='18,3.5 24,7 18,10.5 12,7' fill='%23F6F2EA'/%3E%3Ccircle cx='18' cy='7' r='1.5' fill='%23231F20'/%3E%3Cpolygon points='0,2 5,7 0,12' fill='%23F6F2EA'/%3E%3Cpolygon points='36,2 31,7 36,12' fill='%23F6F2EA'/%3E%3C/svg%3E");
+      background-repeat: repeat-x;
+      background-position: center;
+    }
+
+    .header {
+      background: var(--atayal-black);
+      color: #FDFBF7;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(35, 31, 32, 0.14);
+    }
+    .header-content { padding: 22px 20px 20px; }
+    .header-badge {
+      display: inline-block;
+      background: var(--atayal-red);
+      color: #fff;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .header h1 { margin: 0 0 10px 0; font-size: 23px; letter-spacing: 1px; }
+    .header p { margin: 0; font-size: 14px; line-height: 1.7; color: #E6DFD3; }
+
+    .loading {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--atayal-muted);
+      font-size: 15px;
+    }
+
+    .day-card {
+      background: var(--atayal-card);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid var(--atayal-border);
+      border-left: 5px solid var(--atayal-red);
+      box-shadow: 0 2px 6px rgba(35, 31, 32, 0.05);
+    }
+    .day-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: var(--atayal-black);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .day-title::before { content: "❖"; color: var(--atayal-red); font-size: 14px; }
+
+    .slots-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+      gap: 9px;
+    }
+
+    .slot-btn {
+      padding: 10px 8px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: center;
+      line-height: 1.45;
+    }
+    .slot-available {
+      background: #FDF7F7;
+      color: var(--atayal-red);
+      border: 1.5px solid var(--atayal-red);
+    }
+    .slot-available:hover {
+      background: var(--atayal-red);
+      color: #FFFFFF;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(158, 42, 43, 0.25);
+    }
+    .slot-booked {
+      background: #EFECE6;
+      color: #A09A90;
+      border: 1.5px solid #DFD9CE;
+      cursor: not-allowed;
+    }
+    .slot-status {
+      font-size: 12px;
+      font-weight: normal;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(35, 31, 32, 0.62);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 420px;
+      max-height: 92vh;
+      overflow-y: auto;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+    }
+    .modal-body { padding: 20px; }
+    .modal h2 { margin: 0 0 10px 0; font-size: 19px; color: var(--atayal-black); letter-spacing: 0.5px; }
+    .selected-info {
+      background: var(--atayal-ramie);
+      border-left: 4px solid var(--atayal-red);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--atayal-red-dark);
+      margin-bottom: 16px;
+    }
+    .form-group { margin-bottom: 13px; }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: var(--atayal-black);
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #D5CEC0;
+      border-radius: 6px;
+      font-size: 15px;
+      background: #FCFBF8;
+      transition: border-color 0.15s;
+      resize: vertical;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--atayal-red);
+      background: #FFFFFF;
+    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel {
+      flex: 1;
+      padding: 11px;
+      border: 1.5px solid #D5CEC0;
+      background: #FFFFFF;
+      color: var(--atayal-black);
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: var(--atayal-ramie); }
+    .btn-submit {
+      flex: 2;
+      padding: 11px;
+      border: none;
+      background: var(--atayal-red);
+      color: #FFFFFF;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .btn-submit:hover { background: var(--atayal-red-dark); }
+    .btn-submit:disabled { background: #B8B2A8; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="atayal-stripe"></div>
+      <div class="header-content">
+        <div class="header-badge">TAYAL CULTURE</div>
+        <h1>館內導覽線上預約</h1>
+        <p>
+          ※ 須於參觀日 3 天前完成預約（每週一休館）。<br>
+          ※ 每日開放 3 場次（08:30–09:30、10:00–11:00、14:30–15:30），每場限預約 1 組。
+        </p>
+      </div>
+      <div class="atayal-stripe"></div>
+    </div>
+
+    <div id="scheduleList" class="loading">場次載入中，請稍候...</div>
+  </div>
+
+  <!-- 預約填寫視窗 -->
+  <div id="bookingModal" class="modal-overlay">
+    <div class="modal">
+      <div class="atayal-stripe"></div>
+      <div class="modal-body">
+        <h2>填寫預約資料</h2>
+        <div id="selectedInfo" class="selected-info"></div>
+        <form id="bookingForm" onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label>聯絡人姓名 *</label>
+            <input type="text" id="name" required placeholder="請輸入姓名">
+          </div>
+          <div class="form-group">
+            <label>聯絡電話 *</label>
+            <input type="tel" id="phone" required placeholder="例如：0912-345678">
+          </div>
+          <div class="form-group">
+            <label>團體名稱 *</label>
+            <input type="text" id="groupName" required placeholder="個人參觀請填「個人」">
+          </div>
+          <div class="form-group">
+            <label>預計人數 *</label>
+            <input type="number" id="peopleCount" min="1" max="200" required placeholder="請輸入人數">
+          </div>
+          <div class="form-group">
+            <label>備註（選填）</label>
+            <textarea id="note" rows="3" placeholder="例如：需無障礙協助、年齡層、特殊需求等"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
+            <button type="submit" id="submitBtn" class="btn-submit">確認預約</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 你的 Google Apps Script 後端 API 網址
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzIAGNcN59IQKuIX43_dagFLQmu0wFZ3jT0xjIkG1EzwGk9eXNwxrblu4IUzf29qyNf/exec';
+
+    let currentSelection = null;
+
+    async function loadSchedule() {
+      const container = document.getElementById('scheduleList');
+      container.innerHTML = '<div class="loading">場次載入中，請稍候...</div>';
+      try {
+        const res = await fetch(API_URL);
+        const days = await res.json();
+        renderSchedule(days);
+      } catch (err) {
+        container.innerHTML = '<div class="loading">載入失敗，請重新整理頁面。</div>';
+      }
+    }
+
+    function renderSchedule(days) {
+      const container = document.getElementById('scheduleList');
+      if (!days || days.length === 0) {
+        container.innerHTML = '<div class="loading">目前無可預約場次。</div>';
+        return;
+      }
+
+      container.innerHTML = days.map(day => {
+        const buttonsHtml = day.slots.map(slot => {
+          if (slot.booked) {
+            return `<button class="slot-btn slot-booked" disabled>${slot.name}<span class="slot-status">已預約</span></button>`;
+          }
+          return `<button class="slot-btn slot-available" onclick="openModal('${day.dateStr}', '${day.displayDate}', '${slot.name}')">${slot.name}<span class="slot-status">可預約</span></button>`;
+        }).join('');
+
+        return `
+          <div class="day-card">
+            <div class="day-title">${day.displayDate}</div>
+            <div class="slots-row">${buttonsHtml}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openModal(dateStr, displayDate, slot) {
+      currentSelection = { dateStr, displayDate, slot };
+      document.getElementById('selectedInfo').textContent = `${displayDate} ${slot}`;
+      document.getElementById('bookingForm').reset();
+      document.getElementById('bookingModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('bookingModal').classList.remove('show');
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '預約處理中...';
+
+      const formData = {
+        dateStr: currentSelection.dateStr,
+        displayDate: currentSelection.displayDate,
+        slot: currentSelection.slot,
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        groupName: document.getElementById('groupName').value,
+        peopleCount: document.getElementById('peopleCount').value,
+        note: document.getElementById('note').value
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(formData)
+        });
+        const result = await res.json();
+        alert(result.message);
+        closeModal();
+        loadSchedule();
+      } catch (err) {
+        alert('送出失敗，請檢查網路連線後重試。');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '確認預約';
+      }
+    }
+
+    loadSchedule();
+  </script>
+</body>
+</html>

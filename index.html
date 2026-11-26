@@ -360,6 +360,17 @@
     }
 
     loadSchedule();
+    <!-- 自訂提示視窗（取代瀏覽器預設彈窗） -->
+  <div id="alertModal" class="modal-overlay">
+    <div class="modal" style="max-width: 340px; text-align: center;">
+      <div class="atayal-stripe"></div>
+      <div class="modal-body">
+        <h2 style="margin-bottom: 12px; color: var(--atayal-red);">泰雅生活館</h2>
+        <p id="alertMessage" style="white-space: pre-line; line-height: 1.7; margin: 0 0 20px; font-size: 15px; color: var(--atayal-black);"></p>
+        <button type="button" class="btn-submit" style="width: 100%;" onclick="closeAlert()">確定</button>
+      </div>
+    </div>
+  </div>
   </script>
 </body>
 </html>

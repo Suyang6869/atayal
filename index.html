@@ -56,7 +56,7 @@
       font-weight: bold;
     }
     .header h1 { margin: 0 0 10px 0; font-size: 23px; letter-spacing: 1px; }
-    .header p { margin: 0; font-size: 14px; line-height: 1.7; color: #E6DFD3; }
+    .header p { margin: 0; font-size: 14px; line-height: 1.75; color: #E6DFD3; }
 
     .loading {
       text-align: center;
@@ -217,7 +217,7 @@
     <div class="header">
       <div class="atayal-stripe"></div>
       <div class="header-content">
-        <div class="header-badge">泰雅生活館｜線上預約導覽系統</div>
+       <div class="header-badge">泰雅生活館｜線上預約導覽系統</div>
         <h1>Atayal Life Museum – Online Tour Booking</h1>
         <p>
           ※ 須於參觀日 3 天前完成預約（每週一休館）。<br>
@@ -267,6 +267,18 @@
             <button type="submit" id="submitBtn" class="btn-submit">確認預約</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自訂提示視窗（取代瀏覽器預設彈窗） -->
+  <div id="alertModal" class="modal-overlay">
+    <div class="modal" style="max-width: 340px; text-align: center;">
+      <div class="atayal-stripe"></div>
+      <div class="modal-body">
+        <h2 style="margin-bottom: 12px; color: var(--atayal-red);">泰雅生活館</h2>
+        <p id="alertMessage" style="white-space: pre-line; line-height: 1.7; margin: 0 0 20px; font-size: 15px; color: var(--atayal-black);"></p>
+        <button type="button" class="btn-submit" style="width: 100%;" onclick="closeAlert()">確定</button>
       </div>
     </div>
   </div>
@@ -324,6 +336,15 @@
       document.getElementById('bookingModal').classList.remove('show');
     }
 
+    function showAlert(message) {
+      document.getElementById('alertMessage').textContent = message;
+      document.getElementById('alertModal').classList.add('show');
+    }
+
+    function closeAlert() {
+      document.getElementById('alertModal').classList.remove('show');
+    }
+
     async function handleSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById('submitBtn');
@@ -348,11 +369,11 @@
           body: JSON.stringify(formData)
         });
         const result = await res.json();
-        alert(result.message);
         closeModal();
+        showAlert(result.message);
         loadSchedule();
       } catch (err) {
-        alert('送出失敗，請檢查網路連線後重試。');
+        showAlert('送出失敗，請檢查網路連線後重試。');
       } finally {
         btn.disabled = false;
         btn.textContent = '確認預約';
@@ -360,17 +381,6 @@
     }
 
     loadSchedule();
-    <!-- 自訂提示視窗（取代瀏覽器預設彈窗） -->
-  <div id="alertModal" class="modal-overlay">
-    <div class="modal" style="max-width: 340px; text-align: center;">
-      <div class="atayal-stripe"></div>
-      <div class="modal-body">
-        <h2 style="margin-bottom: 12px; color: var(--atayal-red);">泰雅生活館</h2>
-        <p id="alertMessage" style="white-space: pre-line; line-height: 1.7; margin: 0 0 20px; font-size: 15px; color: var(--atayal-black);"></p>
-        <button type="button" class="btn-submit" style="width: 100%;" onclick="closeAlert()">確定</button>
-      </div>
-    </div>
-  </div>
   </script>
 </body>
 </html>
